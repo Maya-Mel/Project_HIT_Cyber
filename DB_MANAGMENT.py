@@ -29,6 +29,22 @@ def Establish_DB_Connection():
     except mysql.connector.Error as err:
              print(f"Error: {err}")
 
+
+def CloseDBConnection(MYSQL_CONNECTION):
+    
+    try:
+        if MYSQL_CONNECTION and MYSQL_CONNECTION.is_connected():
+            MYSQL_CONNECTION.close()
+            print("Database connection closed successfully")
+            return True
+        else:
+            print("Connection was already closed or never established")
+            return False
+            
+    except mysql.connector.Error as err:
+        print(f"Error closing connection: {err}")
+        return False
+
 def printTopRows(MYSQL_CONNECTION):
      try:
           MY_Current_Sesion = MYSQL_CONNECTION.cursor()
@@ -41,25 +57,87 @@ def printTopRows(MYSQL_CONNECTION):
              print(f"Error: {err}")
 
 
-def AddUserToDB(MYSQL_CONNECTION, user):
-     try:
-          MY_Current_Sesion = MYSQL_CONNECTION.cursor()
 
-          if isinstance(user.DOFB, str):
-               date_obj = datetime.strptime(user.DOFB, '%d/%m/%Y').date()  
-          else:
-               date_obj = user.DOFB
+def CheckIfUserExists(MYSQL_CONNECTION, email):
+    try:
+        MY_Current_Session = MYSQL_CONNECTION.cursor()
+        query = "SELECT COUNT(*) FROM comunication_ltd.users WHERE email = %s"
+        
+        MY_Current_Session.execute(query, (email,))
+        count = MY_Current_Session.fetchone()[0]
+        MY_Current_Session.close()
+        
+        if count > 0:
+            print(f"User with email {email} exists")
+            return True
+        else:
+            print(f"User with email {email} does not exist")
+            return False
+            
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return False
 
-          query = "INSERT INTO comunication_ltd.users (first_name,last_name,email,password,date_of_birth) VALUES (%s, %s, %s, %s, %s)"
-
-          MY_Current_Sesion.execute(query, (user.F_Name, user.L_Name, user.Mail, user.Password, date_obj))
-          MYSQL_CONNECTION.commit()
-          print(f"User added successfully. Rows affected: {MY_Current_Sesion.rowcount}")
 
 
-     except mysql.connector.Error as err:
-             print(f"Error: {err}")
+def GetUserInfoByMail(MYSQL_CONNECTION, email):
+    try:
+        MY_Current_Session = MYSQL_CONNECTION.cursor(dictionary=True)
+        query = "SELECT * FROM comunication_ltd.users WHERE email = %s"
+        
+        MY_Current_Session.execute(query, (email,))
+        user = MY_Current_Session.fetchone()
+        MY_Current_Session.close()
+        
+        if user:
+            print(f"User found: {user['first_name']} {user['last_name']}")
+            return user
+        else:
+            print(f"No user found with email: {email}")
+            return None
+            
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return None
 
+
+
+def DeleteUser(MYSQL_CONNECTION, email):
+    try:
+        MY_Current_Session = MYSQL_CONNECTION.cursor()
+        query = "DELETE FROM comunication_ltd.users WHERE email = %s"
+        
+        MY_Current_Session.execute(query, (email,))
+        MYSQL_CONNECTION.commit()
+        
+        if MY_Current_Session.rowcount > 0:
+            print(f"User with email {email} deleted successfully.")
+            MY_Current_Session.close()
+            return True
+        else:
+            print(f"No user found with email: {email}")
+            MY_Current_Session.close()
+            return False
+            
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return False
+    
+    
+
+def AddUserToDB(MYSQL_CONNECTION, fname, lname, email, pwd, dob):
+    try:
+         cursor = MYSQL_CONNECTION.cursor()
+         query = "INSERT INTO comunication_ltd.users (first_name, last_name, email, password, date_of_birth) VALUES (%s, %s, %s, %s, %s)"
+
+         cursor.execute(query, (fname, lname, email, pwd, dob))
+         MYSQL_CONNECTION.commit()
+         cursor.close()
+         return True
+
+    except mysql.connector.Error as err:
+         print(f"Error: {err}")
+         return False
      
 
      
