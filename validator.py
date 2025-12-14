@@ -32,7 +32,7 @@ def validate_password_security (password):
                 forbidden_passwords = {line.strip().lower() for line in f}
                 
             if password.lower() in forbidden_passwords:
-                return "Cant Contaon certin Words"
+                return "password is no good"
         except Exception as e:
             print(f"Warning: Could not read dictionary file: {e}")
 

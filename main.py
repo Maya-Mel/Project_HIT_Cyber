@@ -8,6 +8,10 @@ app = Flask(__name__)
 def login():
     return render_template('login.html')
 
+@app.route('/change_password')
+def change_password():
+    return render_template('change_password.html')
+
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'POST':
@@ -16,7 +20,7 @@ def register():
         current_connection = Establish_DB_Connection()
         
         if not current_connection:
-            return render_template('register.html', error_msg="שגיאת חיבור לשרת")
+            return render_template('register.html', error_msg="Connection Error")
 
         fname = request.form['first_name']
         lname = request.form['last_name']
@@ -35,7 +39,7 @@ def register():
 
         if CheckIfUserExists(current_connection, email):
             CloseDBConnection(current_connection)
-            return render_template('register.html', error_msg='המשתמש כבר קיים')
+            return render_template('register.html', error_msg='User already exists')
         
         else:
             print("--- Attempting to add user ---")
@@ -47,9 +51,9 @@ def register():
                 return redirect(url_for('login'))
             else:
                 print("--- DB Error (result was False/None) ---")
-                return render_template('register.html', error_msg="שגיאה בשמירת הנתונים (בדוק את DB_MANAGMENT)")
+                return render_template('register.html', error_msg="Error with DB")
 
     return render_template('register.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
